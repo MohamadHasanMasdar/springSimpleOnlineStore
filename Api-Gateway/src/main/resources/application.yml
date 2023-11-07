@@ -1,0 +1,72 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: API-GATEWAY
+  config:
+    import: optional:configserver:http://localhost:9296
+#  main:
+#    allow-bean-definition-overriding: true
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          github:
+#            clientId: 0157ac212a59bd54f77a
+#            clientSecret: 9f226a80fe8b638f0dae70642c09804879fe33cc
+#          auth0:
+#            provider: okta
+#            client-id: 0oacxl61q0c5DWMyT5d7
+#            client-secret: C6QRJoAqi055SlK8ltu57tRTJOliCi0Ijt0HuKoXNPIBZ9C2Fw_CwNvnXuddN3Ei
+#            scope:
+#        provider:
+#          okta:
+#            authorization-uri: https://dev-89963674.okta.com/oauth2/default
+#            token-uri: https://dev-89963674.okta.com/oauth2/default
+
+  cloud:
+    gateway:
+      routes:
+        - id: ORDER-SERVICE
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/v1/order/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: ORDER-SERVICE
+                fallbackuri: forward:/orderServiceFallBack
+        - id: PRODUCT-SERVICE
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/api/v1/product/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: PRODUCT-SERVICE
+                fallbackuri: forward:/productServiceFallBack
+        - id: PAYMENT-SERVICE
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/v1/payment/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: PAYMENT-SERVICE
+                fallbackuri: forward:/paymentServiceFallBack
+#okta:
+#  oauth2:
+#    issuer: https://dev-89963674.okta.com/oauth2/default
+#    audience: api://default
+#    client-id: 0oacxl61q0c5DWMyT5d7
+#    client-secret: C6QRJoAqi055SlK8ltu57tRTJOliCi0Ijt0HuKoXNPIBZ9C2Fw_CwNvnXuddN3Ei
+#    scopes: openid, profile, email, offline_access
+management:
+  endpoint:
+    gateway:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: mappings,info,health,gateway,beans
